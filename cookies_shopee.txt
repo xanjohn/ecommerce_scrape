@@ -1,0 +1,5 @@
+
+
+SPC_ST=.UjVhTmhGRXRtSGxlcG5MbifeY+pdgA3BlmJ4GIspFMZemOefwzqVReAmUybPWIhCznoct3ulV+ksayzuGZ7RFSH9WPY01usXQP5QgHAe4P6vCZpZIjCwx8UCH6p6rYnckrl8EIe5GLzakiH2xG2lP0dRtmHmwrx54ja4rmq/CLYQCcNYjhmMZNpLk5QShAOg/x/ABABBCjd96feW8ycqHAaybv/SdR5lTXcL1FFWdxjJn3h5REb3S2h2igaPJ/keKEHW1DlMtQLoU3himgVau7vOdluRsVO37IUCVhjnrDw=; Path=/; Domain=.shopee.co.id; Max-Age=630720000; HttpOnly; Secure
+SPC_EC=.UVg2elFubVpaMHhKOG9FeYZCqhpa5yzZyixlZ34kg1WoibnmXLWRckdJfwcXTCANBDQgVBpZqbBof+/8lQvNKL0Vy1u/iTs8Z7VBwNy7mqq5bWGUN21/3Goi4hmcHxsgZYImIngDpb7NM138kHAIT1/2n3A4poIp2lFtXwUCcuUu1dwPIY4Iw60+otLMGil/xc06KKNXhgKM7aefATf9CAIMSRhB+k+be8iXSVgDCy5jOwYzPK3FI3In0WJ4Z95ZNdl4B/7G/FodRylMtjoqPf5BccJyjhZ5Un7gUbjkJJo=; Path=/; Domain=.shopee.co.id; Max-Age=630720000; HttpOnly; Secure
+SPC_U=8345101679

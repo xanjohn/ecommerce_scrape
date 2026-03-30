@@ -1,0 +1,16 @@
+# Folder
+ScrapeData/
+producer/
+ecomscraper/
+.ecomscraper/
+
+# File ekstension
+*.json
+*.pyc
+*.log
+
+# Spesific File
+check.py
+blibliscraperkeywords.py
+dump.py
+kick_jobs.py

@@ -11,7 +11,7 @@ def generate_lazada_sign(token, timestamp, app_key, data_json):
     raw_string = f"{token}&{timestamp}&{app_key}&{data_json}"
     return hashlib.md5(raw_string.encode('utf-8')).hexdigest()
 
-def get_cookies_data(cookies_file):
+def get_cookies_data_lazada(cookies_file):
     with open(cookies_file, 'r') as f:
         data = json.load(f)
     
@@ -109,7 +109,7 @@ def scrape_lazada_comments(product_url):
     if not item_id:
         print("❌ Gagal mendapatkan Item ID dari URL. Pastikan format link benar.")
         return
-    token, cookies = get_cookies_data('lazada_cookies.json')
+    token, cookies = get_cookies_data_laz('lazada_cookies.json')
     
     max_pages = 2
     for page in range(1, max_pages + 1):
@@ -299,8 +299,11 @@ def scrape_blibli_comments(product_url):
             r = requests.get(api_url, headers=headers, impersonate="chrome110", proxies=proxies)
         
             if r.status_code == 200:
+                print(r)
                 data = r.json()
                 items = data.get('data',[])
+                print(data)
+                print(items)
                 final_output = {
                                 "raw": items,
                                 "metadata": {
@@ -319,7 +322,68 @@ def scrape_blibli_comments(product_url):
                 
         except Exception as e:
             print(f"Error {e}")
+
+def scrape_shopee_comments(product_url):
+    with Camoufox(
+        os=["windows","linux"],
+        headless=True,
+    ) as browser:
+        with open('shopee_cookies.json', 'r') as f:
+            cookies_data = json.load(f)
+        context = browser.new_context()
+        page = context.new_page()
+        context.add_cookies(cookies_data)
+        state = {'current_page': 1}
+        def handle_response(response):
+                if response.request.resource_type in ['fetch', 'xhr']:
+                    url = response.url
+                    # print(url)
+                    target_api = "api/v2/item/get_ratings"
+                    if target_api in url:
+                        print(url)
+                        data = response.json()
+                        review_data = data.get('data', {})
+                        print(data)
+                        product_id = data['data']['ratings'][0]['itemid']
+                        print(product_id)
+                        output = {
+                            "raw": review_data,
+                            "metadata": {
+                                "product_id": product_id,
+                                "platform": "shopee",
+                                "url": product_url
+                            }
+                        }
+                        
+                        filename = f"shopee_comment_{product_id}_page_{state['current_page']}.json"
+                        with open(filename, 'w') as f:
+                            json.dump(output, f, indent=4)
+                        print(f"Saved: {filename}")
+
+        page.on('response', handle_response)
+                
+        time_out = random.randint(3000, 6000)
+        print("Navigating...")
+        page.goto(product_url, wait_until="domcontentloaded")            
         
+        for _ in range(2):
+            print(f"Pressing arrow down")
+            page.keyboard.press("PageDown")
+            print(f"Waiting For {time_out}")
+            page.wait_for_timeout(time_out)
+            
+        max_pages = 3
+        
+        for p in range(2, max_pages + 1):
+            state['current_page'] = p
+            for _ in range(2):
+                print(f"Pressing arrow down")
+                page.keyboard.press("PageDown")
+                print(f"Waiting For {time_out}")
+                page.wait_for_timeout(time_out)
+                
+            page.locator(f"button.shopee-button-no-outline:has-text('{p}')").dispatch_event("click")
+            page.wait_for_timeout(time_out)
         
 
 if __name__ == "__main__":
@@ -338,5 +402,7 @@ if __name__ == "__main__":
         scrape_tokopedia_comments(product_url)
     elif platform == "blibli":
         scrape_blibli_comments(product_url)
+    elif platform == "shopee":
+        scrape_shopee_comments(product_url)
     else:
         print(f"Platform {platform} belum bisa di scrape")

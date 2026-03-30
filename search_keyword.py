@@ -31,9 +31,10 @@ def scrape_lazada(keyword):
         api_url = f"https://www.lazada.co.id/catalog/?ajax=true&isFirstRequest=true&page={page}&q={encoded_keyword}"
         headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-                "Referer": "https://www.lazada.co.id/",
-                "Accept": "application/json, text/plain, */*",
-                "Cookie": cookies
+                'Cookie': '__wpkreporterwid_=d0f62c5e-1eff-45c7-a4ab-99abc4067d72; miidlaz=miidgl3vcs1j90s7lepr44k; t_fv=1762039933572; t_uid=zZK4vjlaQojkbsmlB4FiUOdoVtyHCIJW; lwrid=AgGaQcOrAVp%2ByGA3cSsLX39uI5Qx; lzd_cid=f6e5d77d-06a4-4e85-b04d-87f843e91374; lzd_click_id=clkgg5vbk1j9qnl02145te; userLanguageML=id; hng=ID|id-ID|IDR|360; hng.sig=to18pG508Hzz7EPB_okhuQu8kDUP3TDmLlnu4IbIOY8; __itrace_wid=77f6df93-7f39-4af5-a9e3-cbb122738a57; _bl_uid=89mb9m9db2zfdFf3sc7I2qp0pI4b; isg=BJ2dpYoCqJucoUwWV2-hflw4rHmXutEMxOh8519ih_Q0FrxIJgol3FRFRBIQ1unE; EGG_SESS=S_Gs1wHo9OvRHCMp98md7FWq2FVz6tfLS6v06vH8sU3TszpGTwbRo6nHqPpFkgsQCStxu4jWAS-7kzknCdEr1G6hGL4UM99uZqMKuY7JPknB5vGsqtko5yOOsyWWlOYkEzsiGuenBVQqcEorlFbfL40JoN_Yt8t2OI5OKgSoyVY=; lwrtk=AAIEabF19dqIzmdElvkeaBwjWHkeLmzLBETS7iMLF/N2Xqzy/DHRjFQ=; tfstk=gkWqpWOeS-eqno4hYMvaL8nbH2vvKdzI0OT6jGjMcEYmhxgGaaQZfoUTM_8NrUsfCKXNwASdXtZvCopADdpgRywN7iIvBCE8VfXqZYxFqhcMi79uZ5uM8ywQdijcSBq3RsOoHNxMjdxDohmu4H-6jdAMoYqyjhgmsxbGqu8JxnDMSdAorHxemdvGSgqycHpMSNA04gYJjdYisW1f1b-Hio4Os7L0lLd2-iYrLwBym9hA0UuSyT5P2eXwzADGznjgb10nL5Th9EOBla2S3dSkbw-Fu44yIgWALQX0yARR7UdNUQyz8gWwuBXDaDHOVgKGSC588vt2h_RF3sEtribBu6vAfDzf4B5y93AobjvfOM69tt2qJUOpbw-FuqSPPVKuEJB9a_cwi3KyRurrjq5wmYzeAyGt6QYe4eZvkfh9inxyRurr6fdja38QDlC..; t_sid=qHhRHSf1dNRuFJGmEqYCfUXeI7Xwjt3K; utm_channel=NA; lzd_sid=1a155993d3bc8c1325584cea19cdf084; _tb_token_=e53a4eeb3bb00; _m_h5_tk=bfbcbf01793f2988f92e4804b624482e_1773228014832; _m_h5_tk_enc=562c65c92d4495c41b983545a02e9d66; clkgg5vbk1j9qnl02145te_click_time=1773220090414; epssw=11*mmLhKmqm2XZ3gRAzEN0dWhn0WnCLtJjGuiSfY5WWXLxtyzI0S_1fgC6ktyncmuZ-REQJ1rT1po8kc5fvEOMBUmA4Y43vQRAx3fjWQiAxpEAQe5kF7LOUhX_YW-Aur6a3mDRkz1BMammmmCHKxt_U1DRsVGymNtV3M8H4KtnDijDcQJXP4h0u5paWzyFCzucniWvMnepqPaNBP8JE1_7C1zWmuuMCtnkbiammmmXmSRmmqeam7D7tStF3fDv0NRemfDZJuw8aEmNEBBBmBjaYNtym2PmemvgEuu7nEHLxaYIJhXMJf-N8mvfa'
+                # "Referer": "https://www.lazada.co.id/",
+                # "Accept": "application/json, text/plain, */*",
+                # "Cookie": cookies
                 }     
         try:
             # print(api_url)
@@ -263,7 +264,74 @@ def scrape_blibli(keyword):
         except Exception as e:
             print(f"Error {e}")
             break   
-    
+
+def scrape_shopee(keyword):
+    encoded_keyword = urllib.parse.quote(keyword)
+    max_pages = 2
+    with Camoufox(
+        os=["windows", "macos", "linux"],
+        # persistent_context=True,
+        # user_data_dir='./shopee_session',
+        headless=True
+    ) as browser:
+        with open('shopee_cookies.json', 'r') as f:
+            cookies_data = json.load(f)
+        context = browser.new_context()
+        context.add_cookies(cookies_data)
+        page = context.new_page()
+        
+        state = {"current_page": 0}
+        
+        def handle_response(response):
+            try:
+                if response.request.resource_type in ['fetch', 'xhr']:
+                    url = response.url
+                    target_api = "api/v4/search/search_items"
+                    if target_api in url:
+                        data = response.json()
+                        print(data)
+                        items = data.get("items", [])
+                        if not items:
+                            print("Data Not Found")
+                            return
+                        output = {
+                            "raw": items,
+                            "metadata": {
+                                "keyword": keyword,
+                                "platform": "shopee",
+                                "url": f'https://shopee.co.id/search?keyword={encoded_keyword}&page={state['current_page']}'
+                            }
+                        }
+
+                        filename = f"shopee_{keyword.replace(' ', '_')}_page_{state['current_page']}.json"
+                        with open(filename, 'w') as f:
+                            json.dump(output, f, indent=4)
+                        print(f"[Shopee] File Saved: {filename}")
+                else:
+                    pass
+
+            except Exception as e:
+                print(f"[Shopee] Error {e}")
+
+        page.on('response', handle_response)
+
+        for p in range(0, max_pages):
+            state['current_page'] = p
+            print(f"[Shopee] Open Page {p}")
+            try:
+                print(f"[Shopee] Scraping page {p}")
+                url = f"https://shopee.co.id/search?keyword={encoded_keyword}&page={p}"
+                page.goto(url)
+                page.mouse.wheel(0, 1000)
+                page.wait_for_timeout(2000)
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight / 1.5)")
+                page.wait_for_timeout(8000)
+                cookies_data = page.context.cookies()
+                with open("shopee_cookies.json", "w", encoding="utf-8") as f:
+                    json.dump(cookies_data, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"Cannot access pages")
+                pass
 
 
 if __name__ == "__main__":
@@ -282,6 +350,8 @@ if __name__ == "__main__":
         scrape_tokped(target_keyword)
     elif platform == "blibli":
         scrape_blibli(target_keyword)
+    elif platform == "shopee":
+        scrape_shopee(target_keyword)
     else:
         print(f"Platform {platform} belum bisa di scrape")
         
