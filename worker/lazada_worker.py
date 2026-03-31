@@ -37,7 +37,7 @@ class WorkerLazada():
                 if resp.status_code == 200:
                     store_raw(
                         raw=resp.json(), 
-                        platform='Lazada', 
+                        platform='lazada', 
                         type_data='keyword', 
                         keyword=keyword, 
                         page=current_page
@@ -59,15 +59,16 @@ class WorkerLazada():
         print(f"\n[!] Stop {killer._signal}")
     
     def worker_comments(self):
-        w = Worker(tubename='lazada_link_product')
-        p = Producer(tubename='lazada_comment')
+        w = Worker(tubename='test_link_lazada')
+        p = Producer(tubename='test_link_lazada')
         killer = GracefulKiller()
         service = ServiceLazada()
+        
         print("[*] Lazada Worker is active...")
-        print("[*] Press Ctrl+C to stop.")
+        
         while not killer.kill_now:
-            job = w.getJob(timeout=100)
-            if not job:
+            job = w.getJob(timeout=10)
+            if not job: 
                 continue
             
             try:
@@ -78,46 +79,60 @@ class WorkerLazada():
                 
                 print(f" [+] Processing: {url_product} | Page: {current_page}")
                 
-                resp = service.scrape_lazada_comments(url_product, page=current_page)   
+                resp = service.scrape_lazada_comments(url_product, page=current_page) 
                 
+                if resp is None:
+                    print(f" [!] Gagal total koneksi di page {current_page}. Release job.")
+                    w.releaseJob(job, delay=30)
+                    continue
+
                 if resp.status_code == 200:
                     data = resp.json()
-                    if "FAIL_SYS" in str(data.get("ret", [])):
-                        print(f" [!] Job Released: Error Captcha")
+                    ret_status = str(data.get("ret", []))
+
+                    if "FAIL_SYS" in ret_status:
+                        print(f"Captcha detected")
                         w.releaseJob(job, delay=60)
+                        
                     else:
-                        store_raw(
-                            raw=data, 
-                            platform='lazada', 
-                            type_data='comments', 
-                            url_product=url_product, 
-                            page=current_page
-                        )
+                        reviews = data.get('data', {}).get('module', {}).get('reviews', [])
+                        if not reviews:
+                            print(f" [i] No review in page {current_page}.")
+                            w.deleteJob(job)
+                            continue
+
+                        store_raw(raw=data, platform='lazada', type_data='comments', 
+                                url_product=url_product, page=current_page)
+                        
+                        is_expired = False
+                        for rev in reviews:
+                            rev_time = rev.get('reviewTime', '').lower()
+                            if "tahun" in rev_time:
+                                is_expired = True
+                                break
                         
                         w.deleteJob(job)
-                        
-                        with open(f"comment_lazada_{url_product}_{current_page}.json", "w") as file:
-                            json.dump(data, file)
-                        
-                        should_stop = getattr(resp, 'stop_pagination', False)
-                        
-                        if current_page < max_page and should_stop == False:
+
+                        if current_page < max_page and not is_expired:
                             message['page'] = current_page + 1
-                            p.setJob(json.dumps(message))
-                            print(f" [->] Push to job {current_page + 1}")
+                            p.setJob(json.dumps(message), pri=100)
+                            print(f" [->] Go to next page {current_page + 1}")
                         else:
-                            print(f" Done {url_product} already reach {max_page} max page.")
+                            print(f" [√] Done:Limit")
+                
                 else:
-                    w.buryJob(job)       
+                    print(f" [!] HTTP Error {resp.status_code}. Burying job.")
+                    w.buryJob(job)
+
             except Exception as e:
-                print(f" [X] Error: {e}")
+                print(f" [X] Worker Error: {e}")
                 w.buryJob(job)
-            
+                
         print(f"\n[!] Stop {killer._signal}")
         
     def worker_store(self):
         w = Worker(tubename='lazada_store_link')
-        p = Producer(tubename='lazada_store')
+        # p = Producer(tubename='lazada_store')
         p_page = Producer(tubename='lazada_store_link')
         killer = GracefulKiller()
         service = ServiceLazada()
@@ -125,13 +140,12 @@ class WorkerLazada():
         print("[*] Press Ctrl+C to stop.")
         while not killer.kill_now:
             job = w.getJob(timeout=5)
-            
             if not job:
                 continue
             
             try:
                 message = json.loads(job.job_data)
-                url_store = message['url_store']
+                url_store = message['url_product']
                 current_page = message.get('page', 1)
                 max_page = message.get('max_page', 2)
                 

@@ -79,30 +79,62 @@ class ServiceBlibli:
             
         return resp
     
-    def scrape_blibli_store(self, url_brand, page):
-        product_url_list = []
-        path = urlparse(url_brand).path
-        brand_name = path.strip('/').split('/')[-1]
-        encoded_brand = urllib.parse.quote(brand_name)    
+    def scrape_blibli_store(self, url_store, page):
+        page = int(page)
+        path = urlparse(url_store).path    
+        path_split = path.split('/')
+        store = path_split[1]
+        store_name = path_split[-1]
+        start_index = (page - 1) * 40
+        itemPerPage = 40
+        print(path_split)
+        
+        if 'brand' in path_split:
+            print("brand found")
+            query_params = {
+                "promoTab": "false",
+                "excludeProductList": "false",
+                "page": page,
+                "start": start_index,
+                "itemPerPage": itemPerPage,
+                "intent": "false",
+                "multiCategory": "true",
+                "showFacet": "false",
+                "brandSearch": "true"
+            }
+            base_api_url = f"https://www.blibli.com/backend/search/brand/{store_name}"
+
+            # print(url_store)
+            # print(path_store)
+            # print(path_name_store)
+        elif 'merchant' in path_store:
+            print('merchant found')
+            query_params = {
+                "promoTab": "false",
+                "excludeProductList": "false",
+                "page": page,          
+                "start": start_index,  
+                "multiCategory": "true",
+                "defaultPickupPoint": "true",
+                "facetOnly": "false",
+                "pickupPointCode": "PP-3162573", 
+                "intent": "false",
+                "itemPerPage": 40    
+            }
+            base_api_url = f"https://www.blibli.com/backend/search/merchant/{store_name}"
+            # print(url_store)
+            # print(path_store)
+            # print(path_name_store)
+        
         headers = {
             "accept": "application/json, text/plain, */*",
             "accept-language": "en-US,en;q=0.9",
-            "referer": f"https://www.blibli.com/brand/{encoded_brand}",
+            "referer": url_store,
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         }
-        start_index = (page - 1) * 40
-        print(f"💬 [Blibli] Memproses Brand: {brand_name} | Page: {page}")
-        base_api_url = f"https://www.blibli.com/backend/search/brand/{brand_name}?promoTab=false&excludeProductList=false&page={page}&start=40&intent=false&multiCategory=true&showFacet=false"
-        query_params = {
-                    "promoTab": "false",
-                    "excludeProductList": "false",
-                    "page": page,
-                    "start": start_index,
-                    "intent": "false",
-                    "multiCategory": "true",
-                    "showFacet": "false",
-                    "brandSearch": "false"
-        }
+        
+        print(query_params)
+        print(f"💬 [Blibli] Memproses Toko: {store_name} | Page: {page}")
         resp = requests.get(base_api_url, params=query_params, impersonate="chrome110", headers=headers, proxies=self.proxies)
                     
         return resp

@@ -60,8 +60,10 @@ class WorkerTokopedia():
         print(f"\n[!] Stop {killer._signal}")
     
     def worker_comments(self):
-        w = Worker(tubename='tokopedia_comment')
-        p = Producer(tubename='tokopedia_comment')
+        # w = Worker(tubename='tokopedia_shop_link')
+        # p = Producer(tubename='tokopedia_shop_link')
+        w = Worker(tubename='test_link')
+        p = Producer(tubename='test_link')
         killer = GracefulKiller()
         service = ServiceTokopedia()
         print("[*] Tokopedia Worker is active...")
@@ -107,12 +109,14 @@ class WorkerTokopedia():
         print(f"\n[!] Stop {killer._signal}")
         
     def worker_store(self):
-        w = Worker(tubename='tokopedia_store')
-        p = Producer(tubename='tokopedia_store')
+        w = Worker(tubename='tokopedia_store_link')
+        p = Producer(tubename='tokopedia_store_link')
+        p_comment = Producer(tubename='tokopedia_shop_link')
         killer = GracefulKiller()
         service = ServiceTokopedia()
         print("[*] Tokopedia Worker is active...")
         print("[*] Press Ctrl+C to stop.")
+        product_url_list=[]
         while not killer.kill_now:
             job = w.getJob(timeout=5)
             
@@ -129,7 +133,22 @@ class WorkerTokopedia():
                 
                 resp = service.get_shop_product(url_store, page=current_page)   
                 
+                res_json = resp.json()
                 if resp.status_code == 200:
+                    first_node = res_json[0].get('data', {})
+                    shop_product_node = first_node.get('GetShopProduct') 
+                    items = shop_product_node.get('data', [])
+                    for item in items:
+                        url = item.get('product_url') 
+                        product_url_list.append(url)
+                        comment_job = {
+                                "url_product": url,
+                                "page": 1,
+                                "max_page": 10 
+                        }
+                        p_comment.setJob(json.dumps(comment_job))
+                    print(f"Obtained {len(product_url_list)} Links")
+                    print(product_url_list)
                     store_raw(
                         raw=resp.json(), 
                         platform='tokopedia', 

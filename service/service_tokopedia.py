@@ -172,17 +172,35 @@ class ServiceTokopedia:
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...",
                 "x-device": "desktop",
             }
-        print(f"💬 [Tokopedia] Memproses ID: {product_id} | Page: {page}")
-                    
-        resp = requests.post(api_url, json=payload, headers=headers, impersonate="chrome110")
-        return resp
+        print(f"[Tokopedia] Processing ID: {product_id} | Page: {page}")
+        
+        last_resp = None
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            time_sleep = random.uniform(3, 7)
+            try:
+                resp = requests.post(api_url, json=payload, headers=headers, impersonate="chrome110")
+                
+                if resp.status_code == 200:
+                    return resp
+                print(f" [!] HTTP {resp.status_code} detected. Retrying...")
+                # last_resp = resp
+                time.sleep(time_sleep)
+            except Exception as e:
+                print(f"Error {e}")
+                print(f'Retrying in attemp{attempt} in {time_sleep}')
+                time.sleep(time_sleep)
+                last_resp = None    
+                
+        return last_resp
     
     def get_shop_product(self, shop_url, page):
         shop_data = self.get_shop_id(shop_url)
         
         print(shop_data[0])
         if shop_data[0] is None:
-            print("Berhenti: Gagal mendapatkan metadata toko.")
+            print("Stop, Failed to obtained shop_metadata")
             return
         shop_name, shop_id = shop_data
         api_url = "https://gql.tokopedia.com/graphql/ShopProducts"

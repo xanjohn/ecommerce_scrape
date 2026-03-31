@@ -17,6 +17,7 @@ class ServiceShopee:
         url_parse = urlparse(store_url)
         store_name = url_parse.path.split('/')[-1]
         print(store_name)
+        result = {'items': None, "status":200}
         # encoded_keyword = urllib.parse.quote(keyword)
         with Camoufox(
             os=["windows", "macos", "linux"],
@@ -46,12 +47,9 @@ class ServiceShopee:
                             raw = data.get("data", {})
                             centralize_item_card = raw.get('centralize_item_card',{})
                             items = centralize_item_card.get('item_cards',[])
-                            print(items)                        
-                            if not items:
-                                print(items)
-                                print("Data Not Found")
-                                return
-                            extracted_data['items'] = items         
+                            # print(items)
+                            if items:
+                                result['items'] = items     
                     else:
                         pass
 
@@ -59,24 +57,26 @@ class ServiceShopee:
                     print(f"[Shopee] Error {e}")
 
             page.on('response', handle_response)
+            
+            page_num = page_num - 1
 
             print(f"[Shopee] Open Page {page_num}")
             try:
-                    print(f"[Shopee] Scraping page {page_num}")
-                    url = f"https://shopee.co.id/{store_name}?page={page_num}&sortBy=pop&tab=0"
-                    # url = f"https://shopee.co.id/search?keyword={encoded_keyword}&page={p}"
-                    page.goto(url, wait_until="domcontentloaded")
-                    page.mouse.wheel(0, 1000)
-                    page.wait_for_timeout(2000)
-                    page.evaluate("window.scrollTo(0, document.body.scrollHeight / 1.5)")
-                    page.wait_for_timeout(10000)
-                    cookies_data = page.context.cookies()
-                    with open("shopee_cookies.json", "w", encoding="utf-8") as f:
-                        json.dump(cookies_data, f, indent=2, ensure_ascii=False)
+                print(f"[Shopee] Scraping page {page_num}")
+                url = f"https://shopee.co.id/{store_name}?page={page_num}&sortBy=pop&tab=0"
+                # url = f"https://shopee.co.id/search?keyword={encoded_keyword}&page={p}"
+                page.goto(url, wait_until="domcontentloaded")
+                page.mouse.wheel(0, 1000)
+                page.wait_for_timeout(2000)
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight / 1.5)")
+                page.wait_for_timeout(10000)
+                cookies_data = page.context.cookies()
+                with open("shopee_cookies.json", "w", encoding="utf-8") as f:
+                    json.dump(cookies_data, f, indent=2, ensure_ascii=False)
             except Exception as e:
-                    print(f"Cannot access pages")
-                    pass
-            return extracted_data['items']
+                print(f"Cannot access pages")
+                pass
+        return result
 
     def scrape_shopee_keyword(self, keyword, page_num):
         encoded_keyword = urllib.parse.quote(keyword)
@@ -105,7 +105,7 @@ class ServiceShopee:
                             if not items:
                                 print("Data Not Found")
                                 return
-                            extracted_data['items'] = items
+                            extracted_data['items'] = data
                     else:
                         pass
 
@@ -130,9 +130,7 @@ class ServiceShopee:
                     pass
             return extracted_data['items']
 
-    def scrape_shopee_comments(self, product_url, start_page):
-        
-        results = []
+    def scrape_shopee_comments(self, product_url, p):
         with Camoufox(
             os=["windows","linux"],
             headless=True,
@@ -143,9 +141,7 @@ class ServiceShopee:
             context = browser.new_context()
             page = context.new_page()
             context.add_cookies(cookies_data)
-            
-            results = {'data': None, "has_next": True}
-            # state = {'current_page': page, 'has_review': True}
+            state = {'current_page': p, 'has_review': True, 'items': None}
             def handle_response(response):
                     if response.request.resource_type in ['fetch', 'xhr']:
                         url = response.url
@@ -160,7 +156,8 @@ class ServiceShopee:
                             if not review_data:
                                 print("Review Not Found")
                                 state['has_review'] = False
-                                return
+                            print(product_id)
+                            state['items'] = data
                             
 
             page.on('response', handle_response)
@@ -176,18 +173,32 @@ class ServiceShopee:
                 page.keyboard.press("PageDown")
                 print(f"Waiting For {time_out}")
                 page.wait_for_timeout(time_out)
+            
+            if not state['has_review']:
+                return state
+               
+            for _ in range(2):
+                print(f"Pressing arrow down")
+                page.keyboard.press("PageDown")
+                print(f"Waiting For {time_out}")
+                page.wait_for_timeout(time_out)
                 
-            # end_page = start_page + 1
+            page.locator(f"button.shopee-button-no-outline:has-text('{p}')").dispatch_event("click")
+            page.wait_for_timeout(time_out)
+            
+            return state
+            # max_pages = 2
             
             # for p in range(2, max_pages + 1):
-                if not state['has_review']:
-                    break
-                state['current_page'] = p
-                for _ in range(2):
-                    print(f"Pressing arrow down")
-                    page.keyboard.press("PageDown")
-                    print(f"Waiting For {time_out}")
-                    page.wait_for_timeout(time_out)
+            #     if not state['has_review']:
+            #         break
                     
-                page.locator(f"button.shopee-button-no-outline:has-text('{p}')").dispatch_event("click")
-                page.wait_for_timeout(time_out)
+            #     state['current_page'] = p
+            #     for _ in range(2):
+            #         print(f"Pressing arrow down")
+            #         page.keyboard.press("PageDown")
+            #         print(f"Waiting For {time_out}")
+            #         page.wait_for_timeout(time_out)
+                    
+            #     page.locator(f"button.shopee-button-no-outline:has-text('{p}')").dispatch_event("click")
+            #     page.wait_for_timeout(time_out)

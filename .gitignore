@@ -3,6 +3,8 @@ ScrapeData/
 producer/
 ecomscraper/
 .ecomscraper/
+beanstalk_console/
+
 
 # File ekstension
 *.json
@@ -14,3 +16,8 @@ check.py
 blibliscraperkeywords.py
 dump.py
 kick_jobs.py
+input_store_link.py
+cookies_shopee.txt
+run_producer.py
+test_blibli.py
+monit_lazada.py
