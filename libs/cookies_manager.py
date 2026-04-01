@@ -4,7 +4,7 @@ import os
 import base64
 
 
-def fresh_cookies_from_redis(ecommerce):
+def cookies_from_redis(ecommerce):
     r = redis.Redis(
         host='localhost',
         port=6379,
@@ -14,8 +14,28 @@ def fresh_cookies_from_redis(ecommerce):
     resp_redis = r.lpop(f"{ecommerce}_cookies")
     r.close()
     if resp_redis:
+        print("[Cookies] Cookies from redis availible")
         return json.loads(resp_redis)
     else:
         print('[Cookies] No Cookies availible')
         return None
+
+def cookies_from_local(ecommerce):
+    cookies_file = f"{ecommerce}_cookies.json"
+    if not os.path.exists(cookies_file):
+        print(f"[Cookies] File {cookies_file} not found")
+        return None
+        
+    with open(cookies_file, 'r') as f:
+        return json.load(f)
+
+def get_cookies(ecommerce):
+    cookies_data = cookies_from_redis(ecommerce)
+    if not cookies_data:
+        cookies_data = cookies_from_local(ecommerce)
+        if cookies_data:
+            print("[Cookies] Cookies from file is ready")
+    else:
+        print('[Cookies] Cookies from Redis is ready')
+    return cookies_data
     

@@ -9,11 +9,11 @@ import urllib.parse
 from urllib.parse import urlparse
 from curl_cffi import requests
 from camoufox.sync_api import Camoufox
-from libs.cookies_manager import fresh_cookies_from_redis
+from libs.cookies_manager import get_cookies
 
 
 class ServiceShopee:
-    def scrape_shopee_store(self, store_url, page_num):
+    def scrape_shopee_store(self, store_url, page_num, cookies_redis):
         product_url_list = []
         url_parse = urlparse(store_url)
         store_name = url_parse.path.split('/')[-1]
@@ -29,7 +29,7 @@ class ServiceShopee:
         ) as browser:
             # with open('shopee_cookies.json', 'r') as f:
             #     cookies_data = json.load(f)
-            cookies_data = fresh_cookies_from_redis('shopee')
+            cookies_data = get_cookies('shopee')
             context = browser.new_context()
             context.add_cookies(cookies_data)
             page = context.new_page()
@@ -80,7 +80,7 @@ class ServiceShopee:
                 pass
         return result
 
-    def scrape_shopee_keyword(self, keyword, page_num):
+    def scrape_shopee_keyword(self, keyword, page_num, cookies_redis):
         encoded_keyword = urllib.parse.quote(keyword)
         with Camoufox(
             os=["windows", "macos", "linux"],
@@ -133,7 +133,7 @@ class ServiceShopee:
                     pass
             return extracted_data['items']
 
-    def scrape_shopee_comments(self, product_url, p):
+    def scrape_shopee_comments(self, product_url, p, cookies_redis):
         with Camoufox(
             os=["windows","linux"],
             headless=True,
@@ -141,10 +141,10 @@ class ServiceShopee:
         ) as browser:
             # with open('shopee_cookies.json', 'r') as f:
             #     cookies_data = json.load(f)
-            cookies_data = fresh_cookies_from_redis('shopee')
+            # cookies_data = get_cookies('shopee')
             context = browser.new_context()
             page = context.new_page()
-            context.add_cookies(cookies_data)
+            context.add_cookies(cookies_redis)
             state = {'current_page': p, 'has_review': True, 'items': None}
             offset = (p * 6) - 6
             def handle_response(response):

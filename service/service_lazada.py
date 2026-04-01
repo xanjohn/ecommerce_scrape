@@ -11,7 +11,7 @@ import random
 import os
 import json
 from playwright.sync_api import sync_playwright
-from libs.cookies_manager import fresh_cookies_from_redis
+from libs.cookies_manager import get_cookies
 
 
 class ServiceLazada:
@@ -37,9 +37,9 @@ class ServiceLazada:
             return match.group(1)
         return None
             
-    def scrape_lazada_comments(self, product_url, page):
+    def scrape_lazada_comments(self, product_url, page, cookies_redis):
         # self.extract_cookies_lazada()
-        cookies_redis = fresh_cookies_from_redis('lazada')
+        # cookies_redis = get_cookies('lazada')
         item_id = self.extract_item_id_lazada(product_url)
         token, cookies = self.get_cookies_data(cookies_redis)
         token_from_cookies = token

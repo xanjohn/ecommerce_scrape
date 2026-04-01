@@ -10,6 +10,8 @@ from libs.beans import Worker, Producer
 from libs.graceful_killer import GracefulKiller
 from service.service_shopee import ServiceShopee
 from service.service_general import store_raw
+from libs.cookies_manager import get_cookies
+
 
 class WorkerShopee:
     def worker_keyword(self):
@@ -67,6 +69,7 @@ class WorkerShopee:
         p = Producer(tubename='shopee_test')
         killer = GracefulKiller()
         service = ServiceShopee()
+        cookies_ = get_cookies('shopee')
         print("[*] Shopee Worker is active...")
         print("[*] Press Ctrl+C to stop.")
         while not killer.kill_now:
@@ -82,7 +85,7 @@ class WorkerShopee:
                 
                 print(f" [+] Processing: {url_product} | Page: {current_page}")
                 
-                resp = service.scrape_shopee_comments(url_product, p=current_page)   
+                resp = service.scrape_shopee_comments(url_product, p=current_page, cookies_redis=cookies_)   
                 
                 if resp['has_review'] and resp['items']:
                     items = resp['items']
@@ -95,12 +98,12 @@ class WorkerShopee:
                     )
                     
                     w.deleteJob(job)
-                    # if current_page < max_page:
-                    #     message['page'] = current_page + 1
-                    #     p.setJob(json.dumps(message))
-                    #     print(f" [->] Push to job {current_page + 1}")
-                    # else:
-                    #     print(f" Done {url_product} already reach {max_page} max page.")
+                    if current_page < max_page:
+                        message['page'] = current_page + 1
+                        p.setJob(json.dumps(message))
+                        print(f" [->] Push to job {current_page + 1}")
+                    else:
+                        print(f" Done {url_product} already reach {max_page} max page.")
                 elif resp['has_review'] == False:
                     w.deleteJob(job)        
             except Exception as e:
@@ -115,6 +118,7 @@ class WorkerShopee:
         p_comment = Producer(tubename='shopee_product_link')
         killer = GracefulKiller()
         service = ServiceShopee()
+        cookies_ = get_cookies('shopee')
         print("[*] Shopee Worker is active...")
         print("[*] Press Ctrl+C to stop.")
         while not killer.kill_now:
@@ -131,7 +135,7 @@ class WorkerShopee:
                 
                 print(f" [+] Processing: {url_store} | Page: {current_page-1}")
                 
-                resp = service.scrape_shopee_store(url_store, page_num=current_page)
+                resp = service.scrape_shopee_store(url_store, page_num=current_page, cookies_redis=cookies_)
                 print(resp['items'])
                 
                 if resp['status'] == 200 and resp['items']:

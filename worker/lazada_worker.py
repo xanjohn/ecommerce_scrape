@@ -7,6 +7,7 @@ from curl_cffi import requests
 from urllib.parse import urlparse
 from libs.beans import Worker, Producer
 from libs.graceful_killer import GracefulKiller
+from libs.cookies_manager import get_cookies
 from service.service_lazada import ServiceLazada
 from service.service_general import store_raw
 
@@ -63,6 +64,7 @@ class WorkerLazada():
         p = Producer(tubename='test_link_lazada')
         killer = GracefulKiller()
         service = ServiceLazada()
+        cookies_ = get_cookies('lazada')
         
         print("[*] Lazada Worker is active...")
         
@@ -79,7 +81,7 @@ class WorkerLazada():
                 
                 print(f" [+] Processing: {url_product} | Page: {current_page}")
                 
-                resp = service.scrape_lazada_comments(url_product, page=current_page) 
+                resp = service.scrape_lazada_comments(url_product, page=current_page, cookies_redis=cookies_) 
                 
                 if resp is None:
                     print(f" [!] Gagal total koneksi di page {current_page}. Release job.")
