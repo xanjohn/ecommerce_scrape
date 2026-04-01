@@ -21,3 +21,5 @@ cookies_shopee.txt
 run_producer.py
 test_blibli.py
 monit_lazada.py
+caching_redis.py
+cookies_redis.py

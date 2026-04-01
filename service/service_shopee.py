@@ -9,6 +9,7 @@ import urllib.parse
 from urllib.parse import urlparse
 from curl_cffi import requests
 from camoufox.sync_api import Camoufox
+from libs.cookies_manager import fresh_cookies_from_redis
 
 
 class ServiceShopee:
@@ -26,8 +27,9 @@ class ServiceShopee:
             headless=True,
             humanize = 2.0
         ) as browser:
-            with open('shopee_cookies.json', 'r') as f:
-                cookies_data = json.load(f)
+            # with open('shopee_cookies.json', 'r') as f:
+            #     cookies_data = json.load(f)
+            cookies_data = fresh_cookies_from_redis('shopee')
             context = browser.new_context()
             context.add_cookies(cookies_data)
             page = context.new_page()
@@ -86,8 +88,9 @@ class ServiceShopee:
             # user_data_dir='./shopee_session',
             headless=True
         ) as browser:
-            with open('shopee_cookies.json', 'r') as f:
-                cookies_data = json.load(f)
+            # with open('shopee_cookies.json', 'r') as f:
+            #     cookies_data = json.load(f)
+            cookies_data = fresh_cookies_from_redis('shopee')
             context = browser.new_context()
             context.add_cookies(cookies_data)
             page = context.new_page()
@@ -136,17 +139,19 @@ class ServiceShopee:
             headless=True,
             humanize = 2.0
         ) as browser:
-            with open('shopee_cookies.json', 'r') as f:
-                cookies_data = json.load(f)
+            # with open('shopee_cookies.json', 'r') as f:
+            #     cookies_data = json.load(f)
+            cookies_data = fresh_cookies_from_redis('shopee')
             context = browser.new_context()
             page = context.new_page()
             context.add_cookies(cookies_data)
             state = {'current_page': p, 'has_review': True, 'items': None}
+            offset = (p * 6) - 6
             def handle_response(response):
                     if response.request.resource_type in ['fetch', 'xhr']:
                         url = response.url
                         # print(url)
-                        target_api = "api/v2/item/get_ratings"
+                        target_api = f"api/v2/item/get_ratings?filter=0&flag=1&limit=6&offset={offset}"
                         if target_api in url:
                             print(url)
                             data = response.json()
@@ -165,8 +170,8 @@ class ServiceShopee:
             time_out = random.randint(3000, 6000)
             print("Navigating...")
             page.goto(product_url, wait_until="domcontentloaded")
-            with open("shopee_cookies.json", "w", encoding="utf-8") as f:
-                json.dump(cookies_data, f, indent=2, ensure_ascii=False)            
+            # with open("shopee_cookies.json", "w", encoding="utf-8") as f:
+            #     json.dump(cookies_data, f, indent=2, ensure_ascii=False)            
             
             for _ in range(2):
                 print(f"Pressing arrow down")
@@ -176,15 +181,31 @@ class ServiceShopee:
             
             if not state['has_review']:
                 return state
-               
-            for _ in range(2):
-                print(f"Pressing arrow down")
-                page.keyboard.press("PageDown")
-                print(f"Waiting For {time_out}")
-                page.wait_for_timeout(time_out)
+            
+            # for _ in range(2):
+                # print(f"Pressing arrow down")
+                # page.keyboard.press("PageDown")
+            #     print(f"Waiting For {time_out}")
+            #     page.wait_for_timeout(time_out)
                 
-            page.locator(f"button.shopee-button-no-outline:has-text('{p}')").dispatch_event("click")
-            page.wait_for_timeout(time_out)
+            target_page = p
+            if target_page == 1:
+                for _ in range(2):
+                    print(f"Pressing arrow down")
+                    page.keyboard.press("PageDown")
+                    # print(f"Waiting For {time_out}")
+                    # page.wait_for_timeout(time_out)
+                    return state
+            elif target_page > 5:
+                page.locator(f"button.shopee-button-no-outline:has-text('{5}')").dispatch_event("click")
+                next_button = page.locator("button.shopee-icon-button--right")
+                for current_click in range(5, target_page):
+                    print(f"Clicking from {current_click} to {target_page}")
+                    next_button.dispatch_event("click")
+                    page.wait_for_timeout(time_out)
+            else:
+                page.locator(f"button.shopee-button-no-outline:has-text('{p}')").dispatch_event("click")
+                page.wait_for_timeout(time_out)
             
             return state
             # max_pages = 2

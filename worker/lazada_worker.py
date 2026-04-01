@@ -73,7 +73,7 @@ class WorkerLazada():
             
             try:
                 message = json.loads(job.job_data)
-                url_product = message['url_product']
+                url_product = message['url_store']
                 current_page = message.get('page', 1)
                 max_page = message.get('max_page', 2)
                 

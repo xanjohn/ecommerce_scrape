@@ -120,7 +120,7 @@ class ServiceTokopedia:
                 with open(filename, 'w') as f:
                     json.dump(output, f, indent=4)
                 print(f"Saved: {filename}")
-                return p_id
+                return p_id, response
                 
             else:
                 print(f"HTTP Error: {response.status_code}")
