@@ -73,7 +73,7 @@ class ServiceBlibli:
             "sec-gpc": "1",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
         }
-        print(f"💬 [Blibli] Memproses ID: {product_id} | Page: {page}")
+        print(f"[Blibli] Scraping Comments from product ID: {product_id} | Page: {page}")
         api_url = f"https://www.blibli.com/backend/product-review/public-reviews?itemPerPage=5&page={page}&hasMedia=true&productSku={product_id}"
         resp = requests.get(api_url, headers=headers, impersonate="chrome110", proxies=self.proxies)
             
@@ -134,7 +134,7 @@ class ServiceBlibli:
         }
         
         print(query_params)
-        print(f"💬 [Blibli] Memproses Toko: {store_name} | Page: {page}")
+        print(f"[Blibli] Scraping Product from Store: {store_name} | Page: {page}")
         resp = requests.get(base_api_url, params=query_params, impersonate="chrome110", headers=headers, proxies=self.proxies)
                     
         return resp

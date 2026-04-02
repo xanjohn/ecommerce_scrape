@@ -10,7 +10,7 @@ from libs.beans import Worker, Producer
 from libs.graceful_killer import GracefulKiller
 from service.service_shopee import ServiceShopee
 from service.service_general import store_raw
-from libs.cookies_manager import get_cookies
+from libs.cookies_manager import get_cookies, store_invalid_cookies_to_redis
 
 
 class WorkerShopee:
@@ -69,12 +69,19 @@ class WorkerShopee:
         p = Producer(tubename='shopee_test')
         killer = GracefulKiller()
         service = ServiceShopee()
-        cookies_ = get_cookies('shopee')
+        current_cookies = None
+        
         print("[*] Shopee Worker is active...")
-        print("[*] Press Ctrl+C to stop.")
+        # print("[*] Press Ctrl+C to stop.")
         while not killer.kill_now:
-            job = w.getJob(timeout=5)
+            if current_cookies is None:
+                current_cookies = get_cookies('shopee')
+                if not current_cookies:
+                    print("[Shopee Worker] No cookies available. Waiting 60 seconds...")
+                    time.sleep(60)
+                    continue 
             
+            job = w.getJob(timeout=5)
             if not job:
                 continue
             try:
@@ -85,8 +92,14 @@ class WorkerShopee:
                 
                 print(f" [+] Processing: {url_product} | Page: {current_page}")
                 
-                resp = service.scrape_shopee_comments(url_product, p=current_page, cookies_redis=cookies_)   
+                resp = service.scrape_shopee_comments(url_product, p=current_page, cookies_redis=current_cookies)   
                 
+                if resp.get('is_captcha'):
+                    print('Captcha detected')
+                    store_invalid_cookies_to_redis('shopee', current_cookies)
+                    current_cookies = None
+                    w.releaseJob(job, delay=30)
+                    continue
                 if resp['has_review'] and resp['items']:
                     items = resp['items']
                     store_raw(
@@ -104,6 +117,8 @@ class WorkerShopee:
                         print(f" [->] Push to job {current_page + 1}")
                     else:
                         print(f" Done {url_product} already reach {max_page} max page.")
+                    
+                    
                 elif resp['has_review'] == False:
                     w.deleteJob(job)        
             except Exception as e:
@@ -118,10 +133,15 @@ class WorkerShopee:
         p_comment = Producer(tubename='shopee_product_link')
         killer = GracefulKiller()
         service = ServiceShopee()
-        cookies_ = get_cookies('shopee')
         print("[*] Shopee Worker is active...")
         print("[*] Press Ctrl+C to stop.")
         while not killer.kill_now:
+            if current_cookies is None:
+                current_cookies = get_cookies('shopee')
+                if not current_cookies:
+                    print("[Shopee Worker] No cookies available. Waiting 60 seconds...")
+                    time.sleep(60)
+                    continue 
             job = w.getJob(timeout=5)
             
             if not job:
@@ -188,5 +208,3 @@ class WorkerShopee:
 
         print(f"\n[!] Stop {killer._signal}")
         
-if __name__ == "__main__":
-    start_worker()

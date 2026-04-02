@@ -172,5 +172,3 @@ class WorkerTokopedia():
             
         print(f"\n[!] Stop {killer._signal}")
         
-# if __name__ == "__main__":
-#     start_worker()

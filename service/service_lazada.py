@@ -78,7 +78,7 @@ class ServiceLazada:
             time_sleep = random.uniform(3, 7)
             
             try:
-                print(f" [Attempt {attempt+1}] Requesting Page {page}...")
+                print(f" [Service Lazada] [Attempt {attempt+1}] Requesting Page {page}...")
                 resp = requests.post(api_url, data=payload, headers=headers, impersonate="chrome110")
                 last_resp = resp
                 if resp.status_code == 200:
@@ -88,7 +88,7 @@ class ServiceLazada:
                     ret_status = str(ret_list)
                     if "FAIL_SYS" in ret_status or "RGV587_ERROR" in ret_status:
                         print("FAIL_SYS or Captcha detected")
-                        print(f"Attempt {attempt+1}: {time_sleep:.2f}s...")
+                        print(f"[Service Lazada] Attempt {attempt+1}: {time_sleep:.2f}s...")
                         time.sleep(time_sleep)
                         continue 
                     
@@ -101,7 +101,7 @@ class ServiceLazada:
                     time.sleep(time_sleep)
                 
             except Exception as e:
-                print(f" [!] Connection Error: {e}")
+                print(f" [Service Lazada] [!] Connection Error: {e}")
                 time.sleep(random.uniform(2, 5))
         
         return last_resp
@@ -122,34 +122,34 @@ class ServiceLazada:
                 
     
     def scrape_lazada_store(self, shop_url, page):
-        product_url_list = []
-        with open('lazada_cookies.json', 'r') as f:
-            cookies_data = json.load(f)
+        # product_url_list = []
+        # with open('lazada_cookies.json', 'r') as f:
+        #     cookies_data = json.load(f)
         path = urlparse(shop_url).path
         shop_name = path.split('/')[-1]
         proxy_url = "http://bandung:456xyz@proxycrawler.dashboard.nolimit.id:2570"
         proxies = {"http": proxy_url, "https": proxy_url}
-        cookies = self.get_cookies_data('lazada_cookies.json')
+        # cookies = self.get_cookies_data('lazada_cookies.json')
         
-        print(f"[Lazada] Scraping shop ({shop_name}) from Lazada, Page {page}")
+        print(f"[Lazada] Scraping product from store ({shop_name}), Page {page}")
         api_url = f"https://www.lazada.co.id/{shop_name}/?ajax=true&from=wangpu&isFirstRequest=true&langFlag=id&page={page}&pageTypeId=2&q=All-Products"
         payload = {}
         headers = {
-            'accept': 'application/json, text/plain, */*',
-            'accept-language': 'en-US,en;q=0.9',
-            'priority': 'u=1, i',
-            'referer': 'https://www.lazada.co.id/',
-            'sec-ch-ua': '"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
-            #   'Cookie': cookies
-            'Cookie': '__wpkreporterwid_=da27ce1d-fb2b-4abb-841f-e09c65358ae5; t_fv=1772588276894; t_uid=fnsiN5sL2N1m47Kq9zkUoFhd6yaw2TOr; userLanguageML=id; lwrid=AgGctn6dCfndDFv7q5wXX39uI%2FEO; lzd_cid=c33115fd-0207-49d3-b363-9bb9ae1977ca; lzd_sid=1882f651c945e6e2fb05b473b41a6c8d; _tb_token_=7e94f73be55e3; cna=DXsuIh9VuH8CAWeqH2DbHFPF; lwrtk=AAIEaaf9dWDmQdCakUrspqy598ffqjcJysbX4f0If5rg0HLUKE1z1OE=; xlly_s=1; hng=ID|id-ID|IDR|360; hng.sig=to18pG508Hzz7EPB_okhuQu8kDUP3TDmLlnu4IbIOY8; EGG_SESS=S_Gs1wHo9OvRHCMp98md7N0Cls3SvdIH7XYfllZh6Yz7634O4Q6xh2j3wpJWnk9UM8dbjAdbgQMmAFyk_jSzlZ8D4K07_gpKRZHpxYBrAHZktY1zbk6DvOkWv8V823hIRAc4k-VpM5iwdc67qg9knKT0SrsG_LuxWnrzFbaoJPw=; undefined_click_time=1772588341693; _m_h5_tk=a613d288a40ef89555bb81c9717385e3_1772614928889; _m_h5_tk_enc=cd414853f9d2a916a8ca7cb2319d9da3; t_sid=rMdeUU94681gH6VG4cQbFTH1a3XY3LXL; utm_channel=NA; _bl_uid=0bmdame1bhzmvFxOnj8g6v9xwv6O; _gcl_au=1.1.1459322457.1772604466; _ga=GA1.3.1128913782.1772604467; _gid=GA1.3.1310077654.1772604467; _gat_UA-29801013-1=1; _fbp=fb.2.1772604466837.394077540194083574; AMCVS_126E248D54200F960A4C98C6%40AdobeOrg=1; AMCV_126E248D54200F960A4C98C6%40AdobeOrg=-1124106680%7CMCIDTS%7C20517%7CMCMID%7C33933849864538145223333802798903367954%7CMCAAMLH-1773209267%7C3%7CMCAAMB-1773209267%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1772611667s%7CNONE%7CvVersion%7C5.2.0; _uetsid=775c1a80179011f197fe61394aeb2e77; _uetvid=775c5de0179011f1ac1b2727d055ce8b; _ga_44FMGEPY40=GS2.3.s1772604466$o1$g1$t1772604488$j38$l0$h0; isg=BF9fYFu5SrFxGU6tLe51hpbN7rPpxLNm0h7-XfGs_o5VgH8C-ZVXttZTQgj-cIve; epssw=11*mmLDomob3X6igEbg3uflcJ0lguKQrYcnl0S4k_Xu5l-EXiFNip12pMAq-tyDC2sgUSF10XT1yQwo3ImmEOyGQiAx3temmWTiLOAZSBDodjZszrlFEVLS2UEB2cXZD8Eruj6HROAZmTH_DtVMjDi1KGcunDK9Ln_uzDL0fRqDZ0I-OfbmFMvwERTTmCcncJA8iojmNREBP8JEmmHuuuCr1_UbuUkbiaHuu0ulnRmmCvgeRAYSB_EEEmNVVjEmBjQplI8aBjPYNBBmEmEYNBmmV5-uFuuFB5kyxmjmbiNVhgnO12acd15voTEmBB..; tfstk=gcUIL9xbNpvQDX5dep5whFLRp037P17VAQG8i7Lew23peLFxQ45H4McSPAwoL0EFERM8KRDrpvzUPB4_hU8FKMVJP4uR3t7VuWfnr4B24vDE4vcu6YCZvdBl0g0R3t7a5KAjG4FUB-mnW5HiNbdKv8H9XAcDv4HK2dKtwAH-y8HpBdhENLpJv4HO1bDte4nKw1NtIbg-e83R15haBOGGAvFCNS0PivR_CWH6yUUdxDMb138JyyhIAveKCWNQ5XiIH0_UW6aLQ7UU-cjk44Vac8Z8BNTQFWEYevzOHUMzmbN-Gqd2y5NxNm3-fQL812HiXygAkdGgXWr8-JOWyX4Uu0Mmf_Lo4VUqDoeBZsVtJbeomzWD-vF8irqqlaTtR0IPQEkXRTxW1mY-1x5113xooXNxF6xjlaoKsfzV119BqDhi1x5113xovfcZ0116d3f..'
-            # 'Cookie': ''
+        'accept': 'application/json, text/plain, */*',
+        'accept-language': 'en-US,en;q=0.9',
+        'priority': 'u=1, i',
+        'referer': 'https://www.lazada.co.id/',
+        'sec-ch-ua': '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+        'x-csrf-token': 'f317f51e157ee',
+        'Cookie': '__wpkreporterwid_=02631038-e686-4dcf-1e45-963bf0e95d2e; lzd_cid=6c61c345-5d0e-448c-80be-855661eb8483; lwrid=AgGdQxkMlgpNCTBxquNeX39uI7qt; userLanguageML=id; _bl_uid=dzm71n7wey5d9eq99os86XpsUnab; t_fv=1774947209943; t_uid=G5psM9RjveC5ObhNHfUagzwLIjqaP0YB; xlly_s=1; cna=jHlSIlFNdGgCAbb9+u+KOuWV; _gcl_au=1.1.1920824345.1774947210; _ga=GA1.3.1324004323.1774947211; _fbp=fb.2.1774947211615.25591898649954003; lzd_sid=16586375d7a9168994d622115bb938cc; _tb_token_=f317f51e157ee; undefined_click_time=1775111905692; lwrtk=AAIEac5/YSObKRLwTAEpWTNwDJbItPTzfcY1YT5EJk2mUEEGie/9Krw=; t_sid=OLshLSrBTcWcd5EZHSKzGcvsJbygwAmD; utm_channel=NA; _m_h5_tk=ca955e520455adb7febcec7e1a4ed612_1775119831152; _m_h5_tk_enc=94a531cb353e80b1b22c5ac2ba05aa68; hng=ID|id-ID|IDR|360; hng.sig=to18pG508Hzz7EPB_okhuQu8kDUP3TDmLlnu4IbIOY8; EGG_SESS=S_Gs1wHo9OvRHCMp98md7CXpHQ05eSuwQd-wSkDjjIh6uQCRoYb0bdyVgjdluDfMvMmW2ak8PM7Lu5PPbo_JfWhhHAkw6ECTjk3Y8zeikas08HGkJQPBXoyenLVdisR4wF4ZzDc0FjmcGuKqIvFu12x6gNGPJYbgwZCJb3jn9CI=; _gid=GA1.3.1848751026.1775113268; _gat_UA-29801013-1=1; AMCVS_126E248D54200F960A4C98C6%40AdobeOrg=1; AMCV_126E248D54200F960A4C98C6%40AdobeOrg=-1124106680%7CMCIDTS%7C20546%7CMCMID%7C28013983688099196300847155555133644639%7CMCAAMLH-1775718068%7C3%7CMCAAMB-1775718068%7C6G1ynYcLPuiQxYZrsz_pkqfLG9yMXBpb2zX5dvJdYQJzPXImdj0y%7CMCOPTOUT-1775120468s%7CNONE%7CvVersion%7C5.2.0; _uetsid=b9b982d02e6111f18fea0fa73ee7eaf5; _uetvid=17fe69502cdf11f184e759fbc941ac50; _ga_44FMGEPY40=GS2.3.s1775113268$o2$g1$t1775113312$j16$l0$h0; isg=BJWVwRxbUBqXknTjDGEjyJRApJFPkkmkONkTcBc6I4wcbrRg3-K6dYItOGpYtmFc; epssw=12*n8vyL0BGGI60-0LzV-_lEUT0Gtrzml3SqQ_Ymw_a95LzljohMFczlGGIMFvhML53rjcnplIGGbS3miDjNcjSQT7wjYsLD3jOt0OMWieMj_UVfC8pc-s9P73pFNBajwm7AgVmmyMjBZE6XqOWgVkDq046jGJGMPetRGIGuRnh-zz9uO0YXRFKjwItUhIfgRDO7eUqCjPw461ie0zLesCMIGGGGrbHsL14IMeisk8gwl5n3GrGGMEvGGGIjmlNAJIOabziSNvtSsiRaTptJ6s1D3xw7GrOtIbN_zmqaLTj-13vt3jpHM07jEfRSVF6rzE8XMrOJw92MQYrqlzR-6jrhw..; tfstk=gYwmX-OOGSlbWVLPKFkfw87-qtCJkxMsJPptWA3Na4uWkEpYbGDgmP2Ocl7bS74Y8qJYBxEarP4hfSUOGV4oh8FvBqQjIlzKIwQdp9EbqYMNJwhJqZx-LcnwuFhw4TktjOsEcvqbcAt7rzwEbo6MEXytbAzZU4oj0ARqgKSoacotQKlw3QurPckZQju2ULoEAnowgfSu44iZQVzZQgDrPckZ7PkZ_iCqlRyzUwPHGEVtNcwomj0UqT9wImpKg2rqrd-rombZ8ouk7F0eX1QzqoQDduHbHymLkTJ0-oPU7WzPEKc7gu2iORTV4AlZPfe47ERqxx0mT-lyvLEr_72oH-76OuEouXD8w__x6x40O2GVNaagqqUanb8cyVFL2-lu8apu5fV4o0kF4SAyTzPHC0STUCOsg0ioJ6Hcsr6oMTSNqgAFfjoSc2IlqCOsg0ioJgjkTOGqVmgd.; _m_h5_tk=2c33210b5ff997e95317c977a013415e_1774798785044; _m_h5_tk_enc=5e913bb7b8e453b4f5be8f0d65ffe775; x5secdata=xg5709c1ea87fc5033naeab76b6ef1eff53e4f68aa9969a762b01775113420a1984346082a-2092571265abaxc3dajrecaptcha33b17c35bca214dd6a4b30f5f2434efd6c9__bx__www.lazada.co.id:443/bebelac; x5sectag=195562'
         } 
         resp = requests.get(api_url, impersonate="chrome110", headers=headers)
         return resp
         # return items
+

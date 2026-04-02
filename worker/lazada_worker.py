@@ -63,12 +63,20 @@ class WorkerLazada():
         w = Worker(tubename='test_link_lazada')
         p = Producer(tubename='test_link_lazada')
         killer = GracefulKiller()
-        service = ServiceLazada()
-        cookies_ = get_cookies('lazada')
-        
-        print("[*] Lazada Worker is active...")
+        service = ServiceLazada()        
+        print("[Lazada Worker] Lazada Worker is active...")
+        current_cookies = None
+        failed_counter = 0
+        max_failed = 4
         
         while not killer.kill_now:
+            if current_cookies is None:
+                current_cookies = get_cookies('lazada')
+                if not current_cookies:
+                    print("[Lazada Worker] No cookies available. Waiting 60 seconds...")
+                    time.sleep(60)
+                    continue 
+            
             job = w.getJob(timeout=10)
             if not job: 
                 continue
@@ -79,12 +87,13 @@ class WorkerLazada():
                 current_page = message.get('page', 1)
                 max_page = message.get('max_page', 2)
                 
-                print(f" [+] Processing: {url_product} | Page: {current_page}")
+                print(f" [Lazada Worker] Processing: {url_product} | Page: {current_page}")
                 
-                resp = service.scrape_lazada_comments(url_product, page=current_page, cookies_redis=cookies_) 
+                resp = service.scrape_lazada_comments(url_product, page=current_page, cookies_redis=current_cookies) 
                 
+                print(resp)
                 if resp is None:
-                    print(f" [!] Gagal total koneksi di page {current_page}. Release job.")
+                    print(f" [Lazada Worker] {current_page}. Release job.")
                     w.releaseJob(job, delay=30)
                     continue
 
@@ -93,13 +102,24 @@ class WorkerLazada():
                     ret_status = str(data.get("ret", []))
 
                     if "FAIL_SYS" in ret_status:
-                        print(f"Captcha detected")
-                        w.releaseJob(job, delay=60)
+                        failed_counter += 1
+                        # print(f"Captcha detected")
+                        print(f"[Lazada Worker] Failed to scrape {failed_counter} / {max_failed}")
+                        if failed_counter >= max_failed:
+                            print('[Lazada Worker] Failed to scrape, Captcha')
+                            store_invalid_cookies_to_redis(current_cookies, 'lazada')
+                            current_cookies = None
+                            failed_counter = 0
+                            w.releaseJob(job, delay=30)
+                        else:
+                            print('[Lazada Worker] Failed to scrape, might be temporary')
+                            w.releaseJob(job, delay=60)
+                        continue
                         
                     else:
                         reviews = data.get('data', {}).get('module', {}).get('reviews', [])
                         if not reviews:
-                            print(f" [i] No review in page {current_page}.")
+                            print(f" [Lazada Service] No review in page {current_page}.")
                             w.deleteJob(job)
                             continue
 
@@ -113,21 +133,21 @@ class WorkerLazada():
                                 is_expired = True
                                 break
                         
+                        store_valid_cookies_to_redis(current_cookies, 'lazada')
                         w.deleteJob(job)
 
                         if current_page < max_page and not is_expired:
                             message['page'] = current_page + 1
                             p.setJob(json.dumps(message), pri=100)
-                            print(f" [->] Go to next page {current_page + 1}")
+                            print(f" [Worker Lazada] Go to next page {current_page + 1}")
                         else:
-                            print(f" [√] Done:Limit")
-                
+                            print(f" [Worker Lazada] Done: Reaching Maxinum page")
                 else:
-                    print(f" [!] HTTP Error {resp.status_code}. Burying job.")
+                    print(f" [Service] HTTP Error {resp.status_code}. Burying job.")
                     w.buryJob(job)
 
             except Exception as e:
-                print(f" [X] Worker Error: {e}")
+                print(f" [Lazada Worker] Worker Error: {e}")
                 w.buryJob(job)
                 
         print(f"\n[!] Stop {killer._signal}")
@@ -139,7 +159,7 @@ class WorkerLazada():
         killer = GracefulKiller()
         service = ServiceLazada()
         print("[*] Lazada Worker is active...")
-        print("[*] Press Ctrl+C to stop.")
+        # print("[*] Press Ctrl+C to stop.")
         while not killer.kill_now:
             job = w.getJob(timeout=5)
             if not job:
@@ -147,7 +167,7 @@ class WorkerLazada():
             
             try:
                 message = json.loads(job.job_data)
-                url_store = message['url_product']
+                url_store = message['url_store']
                 current_page = message.get('page', 1)
                 max_page = message.get('max_page', 2)
                 
@@ -155,9 +175,12 @@ class WorkerLazada():
                 
                 resp = service.scrape_lazada_store(url_store, page=current_page)   
                 print(resp)
+                
                 all_links = []
                 if resp.status_code == 200:
+                    
                     data = resp.json()
+                    print(data)
                     items = data.get('mods', {}).get('listItems', [])
     
                     p_comment = Producer(tubename='lazada_link_product')
@@ -198,5 +221,3 @@ class WorkerLazada():
             
         print(f"\n[!] Stop {killer._signal}")
         
-# if __name__ == "__main__":
-#     start_worker()
