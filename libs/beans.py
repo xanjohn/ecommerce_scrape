@@ -1,6 +1,6 @@
 import json
 from pystalk import BeanstalkClient
-
+from pystalk import BeanstalkError
 
 class Producer():
     def __init__(self, tubename, host='localhost', port = 14711):
@@ -21,7 +21,12 @@ class Worker():
         self.tubename = tubename
     
     def getJob(self, timeout=10):
-        return self.beans.reserve_job(timeout)
+        try:
+            return self.beans.reserve_job(timeout)
+        except BeanstalkError as e:
+            if "TIMED_OUT" in str(e):
+                return None
+            raise e
         
     def deleteJob(self, job):
         self.beans.delete_job(job.job_id)

@@ -150,7 +150,8 @@ class ServiceTokopedia:
                 # print(r.text)
                 # print(r.content)
         return resp
-        
+    
+    
         
     def scrape_tokopedia_comments(self, product_url, page):
         product_id = self.get_product_main_info(product_url)

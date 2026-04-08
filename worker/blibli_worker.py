@@ -31,7 +31,7 @@ class WorkerBlibli():
                 current_page = message.get('page', 1)
                 max_page = message.get('max_page', 2)
                 
-                print(f" [+] Processing: {keyword} | Page: {current_page}")
+                print(f" [Blibli] Processing: {keyword} | Page: {current_page}")
                 
                 resp = service.scrape_blibli_keyword(keyword, page=current_page)   
                 
@@ -48,16 +48,16 @@ class WorkerBlibli():
                     if current_page < max_page:
                         message['page'] = current_page + 1
                         p.setJob(json.dumps(message))
-                        print(f" [->] Push to job {current_page + 1}")
+                        print(f" [Blibli] Push to job {current_page + 1}")
                     else:
                         print(f" Done {keyword} already reach {max_page} max page.")
                 elif resp.status_code == 403:
                     w.releaseJob(job)                      
             except Exception as e:
-                print(f" [X] Error: {e}")
+                print(f" [Blibli] Error: {e}")
                 w.buryJob(job)
             
-        print(f"\n[!] Stop {killer._signal}")
+        print(f"\n[Blibli] Stop {killer._signal}")
     
     def worker_comments(self):
         # w = Worker(tubename='blibli_comment')

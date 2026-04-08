@@ -13,7 +13,7 @@ class ServiceBlibli:
         proxy_url = "http://bandung:456xyz@proxycrawler.dashboard.nolimit.id:2570"
         self.proxies = {"http": proxy_url, "https": proxy_url}
     
-    def scrape_blibli_keyword(self, keyword, page):
+    def scrape_blibli_keyword(self, keyword, page=1):
         encoded_keyword = urllib.parse.quote(keyword)
         url = f"https://www.blibli.com/cari/{encoded_keyword}"
         headers = {

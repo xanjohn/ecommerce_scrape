@@ -1,5 +1,4 @@
 import argparse
-# Import Class dari file worker kamu
 from worker.tokopedia_worker import WorkerTokopedia 
 
 if __name__ == '__main__':
@@ -10,7 +9,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    # Buat instance/objek dari Class
     worker = WorkerTokopedia()
 
     if args.mode == 'keyword':
